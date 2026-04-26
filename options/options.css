@@ -1,0 +1,29 @@
+:root {
+  color-scheme: light dark;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+}
+
+main {
+  max-width: 480px;
+}
+
+#lang-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+button {
+  width: fit-content;
+  padding: 8px 14px;
+}
+
+#status {
+  min-height: 1em;
+  margin: 4px 0 0;
+}
