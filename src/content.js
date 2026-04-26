@@ -23,11 +23,19 @@ const HINT_WORDS = {
 
 let composing = false;
 let enabledLanguages = [...DEFAULT_ENABLED_LANGS];
+let activeLang = "en";
 
-loadEnabledLanguages();
+loadSettings();
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.enabledLanguages) {
+  if (area !== "local") return;
+  if (changes.enabledLanguages) {
     enabledLanguages = normalizeEnabled(changes.enabledLanguages.newValue);
+    if (!enabledLanguages.includes(activeLang)) {
+      activeLang = enabledLanguages[0];
+    }
+  }
+  if (changes.activeLang?.newValue) {
+    activeLang = changes.activeLang.newValue;
   }
 });
 
@@ -35,9 +43,10 @@ document.addEventListener("compositionstart", () => (composing = true));
 document.addEventListener("compositionend", () => (composing = false));
 document.addEventListener("input", onInput, true);
 
-async function loadEnabledLanguages() {
-  const data = await chrome.storage.local.get("enabledLanguages");
+async function loadSettings() {
+  const data = await chrome.storage.local.get(["enabledLanguages", "activeLang"]);
   enabledLanguages = normalizeEnabled(data.enabledLanguages);
+  activeLang = enabledLanguages.includes(data.activeLang) ? data.activeLang : enabledLanguages[0];
 }
 
 function onInput(event) {

@@ -10,6 +10,7 @@ Chrome extension that detects when the last typed word appears to be entered wit
   - Cyrillic letters typed on EN layout.
 - Rewrites the last word automatically.
 - Updates extension badge with active language (`EN`, `RU`, `UA`).
+- After an auto-switch, the new language is kept as the preferred target for following words.
 
 ## How to add this extension to Chrome
 
