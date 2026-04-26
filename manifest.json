@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "LangSwitcher EU-RU-UA",
+  "description": "Auto-corrects wrongly typed words between configurable keyboard layouts.",
+  "version": "0.2.0",
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options/options.html",
+  "action": {
+    "default_title": "LangSwitcher"
+  }
+}
