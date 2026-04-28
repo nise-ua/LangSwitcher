@@ -1,0 +1,24 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj
+
+      - name: Run Tests
+        run: dotnet test windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj --no-restore --verbosity normal

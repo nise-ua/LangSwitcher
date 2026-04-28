@@ -406,7 +406,7 @@ namespace LangSwitcher
         }
     }
 
-    static class Translator
+    public static class Translator
     {
         static Dictionary<string, Dictionary<char, char>> Layouts = new()
         {
