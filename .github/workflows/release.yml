@@ -19,13 +19,13 @@ jobs:
           cd native
           ./build.sh
           # Create a zip of the app preserving file permissions
-          zip -ry ../LangSwitcher-macOS.zip LangSwitcher.app
+          zip -ry ../LangSwitcher-macOS-${{ github.ref_name }}.zip LangSwitcher.app
 
       - name: Upload Mac Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LangSwitcher-macOS
-          path: LangSwitcher-macOS.zip
+          path: LangSwitcher-macOS-${{ github.ref_name }}.zip
 
   build-windows:
     runs-on: windows-latest
@@ -41,13 +41,13 @@ jobs:
         run: |
           cd windows-cs
           dotnet publish LangSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out
-          move out\LangSwitcher.exe ..\LangSwitcher-Windows.exe
+          move out\LangSwitcher.exe ..\LangSwitcher-Windows-${{ github.ref_name }}.exe
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LangSwitcher-Windows
-          path: LangSwitcher-Windows.exe
+          path: LangSwitcher-Windows-${{ github.ref_name }}.exe
 
   release:
     needs: [build-mac, build-windows]
@@ -67,7 +67,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            LangSwitcher-macOS.zip
-            LangSwitcher-Windows.exe
+            LangSwitcher-macOS-${{ github.ref_name }}.zip
+            LangSwitcher-Windows-${{ github.ref_name }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

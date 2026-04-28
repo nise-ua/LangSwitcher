@@ -19,7 +19,7 @@ Ever typed a whole sentence only to realize you were in the wrong keyboard layou
 There is absolutely **no compilation or terminal required**. Just download, run, and go!
 
 ### 🍏 macOS
-1. Go to the [Releases](../../releases) page and download `LangSwitcher-macOS.zip`.
+1. Go to the [Releases](../../releases) page and download `LangSwitcher-macOS-vX.X.X.zip`.
 2. Extract the ZIP file.
 3. Drag `LangSwitcher.app` into your **Applications** folder and double-click to launch it.
 4. **Permissions**: macOS requires Accessibility permissions to intercept keystrokes.
@@ -28,9 +28,9 @@ There is absolutely **no compilation or terminal required**. Just download, run,
 5. You'll see the LangSwitcher icon appear in your top Menu Bar!
 
 ### 🪟 Windows
-1. Go to the [Releases](../../releases) page and download `LangSwitcher-Windows.exe`.
+1. Go to the [Releases](../../releases) page and download `LangSwitcher-Windows-vX.X.X.exe`.
 2. Move the `.exe` file to a folder of your choice.
-3. Double-click `LangSwitcher-Windows.exe` to run it.
+3. Double-click `LangSwitcher-Windows-vX.X.X.exe` to run it.
 4. The LangSwitcher icon will appear in your System Tray (bottom right corner).
    - *(Tip: You can place a shortcut to the `.exe` in your `shell:startup` folder to have it launch automatically when Windows starts).*
 
