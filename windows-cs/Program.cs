@@ -66,6 +66,7 @@ namespace LangSwitcher
     {
         private NotifyIcon _trayIcon;
         private GlobalKeyboardHook _hook;
+        private System.Windows.Forms.Timer _syncTimer;
         private Settings _settings;
         private string _settingsPath;
         private string _exceptionsPath;
@@ -107,6 +108,36 @@ namespace LangSwitcher
 
             _hook = new GlobalKeyboardHook();
             _hook.KeyDown += Hook_KeyDown;
+
+            _syncTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+            _syncTimer.Tick += SyncTimer_Tick;
+            _syncTimer.Start();
+        }
+
+        private void SyncTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_injecting) return;
+
+            var hwnd = GetForegroundWindow();
+            if (hwnd == IntPtr.Zero) return;
+            uint threadId = GetWindowThreadProcessId(hwnd, out _);
+            IntPtr hkl = GetKeyboardLayout(threadId);
+            uint hklValue = (uint)hkl.ToInt64();
+
+            foreach (var kvp in _langInfo)
+            {
+                // Match by language ID (low word)
+                if ((hklValue & 0xFFFF) == (kvp.Value.Hkl & 0xFFFF))
+                {
+                    if (_settings.ActiveLang != kvp.Key)
+                    {
+                        Logger.Log($"Sync: OS layout changed to {kvp.Key} (HKL: 0x{hklValue:X8})");
+                        _settings.ActiveLang = kvp.Key;
+                        UpdateTrayIcon();
+                    }
+                    break;
+                }
+            }
         }
 
         private void LoadSettings()
@@ -268,7 +299,11 @@ namespace LangSwitcher
             {
                 var hwnd = GetForegroundWindow();
                 if (hwnd != IntPtr.Zero)
+                {
+                    // WM_INPUTLANGCHANGEREQUEST = 0x0050
+                    // Use PostMessage to suggest the change to the foreground window
                     PostMessage(hwnd, 0x0050, IntPtr.Zero, (IntPtr)info.Hkl);
+                }
             }
         }
 
@@ -558,8 +593,9 @@ namespace LangSwitcher
                         var vowelsCount = letters.Count(c => "aeiouy".Contains(char.ToLower(c)));
                         var ratio = (double)vowelsCount / letters.Count;
                         
-                        // English vowel ratio typically between 20-60%
-                        if (ratio >= 0.2 || letters.Count > 6)
+                        // English vowel ratio typically between 20-60%. 
+                        // Removed the "length > 6" check as it caused false positives for valid Cyrillic words.
+                        if (ratio >= 0.2 && ratio <= 0.6)
                             return (corrected, "en");
                     }
                 }
