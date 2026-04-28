@@ -9,7 +9,7 @@ Ever typed a whole sentence only to realize you were in the wrong keyboard layou
 ## 🌟 Features
 - **Auto-Correction**: Instantly fixes mistyped words across *any* application.
 - **Quick Correct Hotkey**: If a word wasn't auto-corrected, simply double-tap your modifier key (Command ⌘ on Mac, Ctrl on Windows) to force the correction! The app automatically learns this mapping for next time.
-- **Custom Exceptions**: Easily add specific acronyms (e.g. `IT`) or enforce your own translations (e.g. `ghbdtn=привет`).
+- **Custom Exceptions**: Easily add specific acronyms (e.g. `IT`) or enforce your own translations (e.g. `ghbdsn=привіт`).
 - **Smart OS Sync**: Keeps track of your system language seamlessly. The menu bar icon changes color to show your current layout (Blue = EN, Yellow = UA, Red = RU).
 
 ---
