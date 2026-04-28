@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="LangSwitcher.Tests\**" />
+    <EmbeddedResource Remove="LangSwitcher.Tests\**" />
+    <None Remove="LangSwitcher.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>
 
