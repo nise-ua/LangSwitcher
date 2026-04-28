@@ -29,21 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          cd windows
-          pip install -r requirements.txt
+          dotnet-version: '8.0.x'
 
       - name: Build Windows exe
         run: |
-          cd windows
-          python -m PyInstaller --noconfirm --windowed --onefile --name "LangSwitcher" --icon "icon.png" langswitcher.py
-          move dist\LangSwitcher.exe ..\LangSwitcher-Windows.exe
+          cd windows-cs
+          dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out
+          move out\LangSwitcher.exe ..\LangSwitcher-Windows.exe
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
