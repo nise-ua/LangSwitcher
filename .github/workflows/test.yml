@@ -29,10 +29,15 @@ jobs:
           dir windows-cs\out >> publish.log 2>&1
           dotnet test windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj --no-restore --verbosity normal > test.log 2>&1
           if ($LASTEXITCODE -ne 0 -or !(Test-Path windows-cs\out\LangSwitcher.exe)) {
-            git config --global user.name "github-actions"
-            git config --global user.email "github-actions@github.com"
-            git add test.log publish.log
-            git commit -m "Upload debug logs"
-            git push origin HEAD:main
+            Write-Host "Test or Publish failed!"
             exit 1
           }
+
+      - name: Upload Debug Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs
+          path: |
+            publish.log
+            test.log
