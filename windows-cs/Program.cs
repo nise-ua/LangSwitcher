@@ -354,7 +354,7 @@ namespace LangSwitcher
             {
                 _lastWord = word;
                 _lastBoundary = boundary;
-                Task.Run(() => TryCorrect(word));
+                Task.Run(() => TryCorrect(word, boundary));
             }
         }
 
@@ -378,14 +378,14 @@ namespace LangSwitcher
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 
-        private void TryCorrect(string word)
+        private void TryCorrect(string word, char boundary)
         {
             var (corrected, lang) = Translator.ChooseCorrection(word, _settings.EnabledLanguages, _customMappings, _customExceptions);
             Logger.Log($"TryCorrect: word='{word}', corrected='{corrected}', targetLang='{lang}'");
             if (corrected == null || corrected == word) return;
 
             _lastWord = corrected;
-            Inject(word, corrected, lang);
+            Inject(word, corrected, lang, boundary);
         }
 
         private void HandleDoubleHotkey()
@@ -412,19 +412,28 @@ namespace LangSwitcher
             SetLang(lang, true);
         }
 
-        private void Inject(string original, string corrected, string lang)
+        private void Inject(string original, string corrected, string lang, char boundary)
         {
             _injecting = true;
             try
             {
-                Thread.Sleep(80);
-                for (int i = 0; i < original.Length; i++)
+                // Give the system a moment to process the last keystroke
+                Thread.Sleep(20);
+                
+                // Backspace the word + boundary if it was a space/tab/enter
+                int backspaces = original.Length + (boundary != '\0' ? 1 : 0);
+                for (int i = 0; i < backspaces; i++)
                 {
                     InputSimulator.SimulateKeyPress(0x08); // Backspace
-                    Thread.Sleep(5);
+                    Thread.Sleep(2);
                 }
-                Thread.Sleep(20);
-                InputSimulator.SimulateText(corrected);
+                
+                Thread.Sleep(10);
+                // Type the corrected word + original boundary
+                string textToInject = corrected;
+                if (boundary != '\0') textToInject += boundary;
+                
+                InputSimulator.SimulateText(textToInject);
             }
             finally { _injecting = false; }
             SetLang(lang, false);
@@ -446,6 +455,26 @@ namespace LangSwitcher
         };
 
         static Dictionary<string, Dictionary<char, char>> CyrToEn = new();
+        
+        static HashSet<string> EnBlock = new() {
+            "i","a","the","an","my","me","we","us","he","she","it",
+            "they","his","her","its","our","your","who","what","that",
+            "is","am","are","was","were","be","been","do","does","did",
+            "have","has","had","go","get","got","use","make","see","say",
+            "know","think","come","want","look","work","works","need",
+            "feel","try","run","in","on","at","to","of","or","if","as",
+            "by","up","so","no","ok","and","but","for","not","all",
+            "can","may","out","one","two","new","old","set","put","add",
+            "yes","let","now","any","how","too","off","key","way","day",
+            "end","top","still","just","also","when","then","click",
+            "change","actually","doesn","hello","world","test","here",
+            "there","about","after","before","some","with","from","this"
+        };
+
+        static HashSet<string> CyrHints = new() {
+            "привет","как","это","что","для","всем","привіт","як","це",
+            "що","усім","ми","вони","бути","є","її"
+        };
 
         static Translator()
         {
@@ -490,6 +519,9 @@ namespace LangSwitcher
                 foreach (var lang in enabled)
                 {
                     if (lang == "en" || !Layouts.ContainsKey(lang)) continue;
+                    
+                    if (EnBlock.Contains(lower)) return (null, null);
+
                     var corrected = Transform(word, Layouts[lang]);
                     
                     var letters = corrected.Where(IsCyr).ToList();
@@ -510,11 +542,26 @@ namespace LangSwitcher
             }
             else if (word.Any(IsCyr) && !word.Any(IsLatin) && enabled.Contains("en"))
             {
+                if (CyrHints.Contains(lower)) return (null, null);
+
                 foreach (var lang in enabled)
                 {
                     if (lang == "en" || !CyrToEn.ContainsKey(lang)) continue;
                     var corrected = Transform(word, CyrToEn[lang]);
-                    if (!corrected.Any(IsCyr)) return (corrected, "en");
+                    
+                    // Only auto-correct to English if the result looks like English (vowel check)
+                    // or if it's a long enough word to be a likely mistake.
+                    // This prevents correcting valid Cyrillic words like "как", "дела" to nonsense.
+                    var letters = corrected.Where(char.IsLetter).ToList();
+                    if (letters.Count > 0)
+                    {
+                        var vowelsCount = letters.Count(c => "aeiouy".Contains(char.ToLower(c)));
+                        var ratio = (double)vowelsCount / letters.Count;
+                        
+                        // English vowel ratio typically between 20-60%
+                        if (ratio >= 0.2 || letters.Count > 6)
+                            return (corrected, "en");
+                    }
                 }
             }
             return (null, null);
