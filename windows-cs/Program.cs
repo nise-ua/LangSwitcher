@@ -21,10 +21,37 @@ namespace LangSwitcher
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            using (var app = new LangSwitcherApp())
+            Logger.Log("LangSwitcher Application Started.");
+            try
             {
-                Application.Run();
+                using (var app = new LangSwitcherApp())
+                {
+                    Application.Run();
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.Log($"FATAL ERROR: {ex}");
+            }
+            Logger.Log("LangSwitcher Application Exited.");
+        }
+    }
+
+    static class Logger
+    {
+        private static string _logFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LangSwitcher", "langswitcher.log");
+        private static object _lock = new object();
+
+        public static void Log(string message)
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    File.AppendAllText(_logFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n");
+                }
+            }
+            catch { }
         }
     }
 
@@ -256,6 +283,7 @@ namespace LangSwitcher
             if (_injecting) return;
 
             var key = e.KeyboardData.VirtualCode;
+            Logger.Log($"KeyDown: {key} (0x{key:X})");
 
             // Hotkey tracking
             bool isTrigger = false;
@@ -321,6 +349,7 @@ namespace LangSwitcher
         {
             var word = new string(_wordBuf.ToArray());
             _wordBuf.Clear();
+            Logger.Log($"ProcessWord: '{word}', boundary: '{boundary}'");
             if (!string.IsNullOrEmpty(word))
             {
                 _lastWord = word;
@@ -352,6 +381,7 @@ namespace LangSwitcher
         private void TryCorrect(string word)
         {
             var (corrected, lang) = Translator.ChooseCorrection(word, _settings.EnabledLanguages, _customMappings, _customExceptions);
+            Logger.Log($"TryCorrect: word='{word}', corrected='{corrected}', targetLang='{lang}'");
             if (corrected == null || corrected == word) return;
 
             _lastWord = corrected;
@@ -362,6 +392,7 @@ namespace LangSwitcher
         {
             if (string.IsNullOrEmpty(_lastWord)) return;
             var (corr, lang) = Translator.ForceTranslate(_lastWord, _settings.EnabledLanguages.Contains("ru") ? "ru" : "ua");
+            Logger.Log($"HandleDoubleHotkey: word='{_lastWord}', force corrected='{corr}', lang='{lang}'");
             SaveCustomDictionaryEntry(_lastWord, corr);
 
             _injecting = true;
