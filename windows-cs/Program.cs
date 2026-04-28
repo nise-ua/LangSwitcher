@@ -486,6 +486,7 @@ namespace LangSwitcher
 
             if (word.Any(IsLatin) && !word.Any(IsCyr))
             {
+                // First try direct reverse mapping (check if word uniquely maps to one layout's alphabet)
                 foreach (var lang in enabled)
                 {
                     if (lang == "en" || !Layouts.ContainsKey(lang)) continue;
@@ -494,6 +495,13 @@ namespace LangSwitcher
                     var letters = corrected.Where(IsCyr).ToList();
                     if (letters.Count > 0)
                     {
+                        // If it contains specific Ukrainian letters and we are checking UA, return immediately
+                        if (lang == "ua" && letters.Any(c => "іїєґ".Contains(char.ToLower(c))))
+                            return (corrected, lang);
+                        // If it contains specific Russian letters and we are checking RU, return immediately
+                        if (lang == "ru" && letters.Any(c => "ыэъё".Contains(char.ToLower(c))))
+                            return (corrected, lang);
+                            
                         var vowelsCount = letters.Count(c => "аеёиоуыэюяіїє".Contains(char.ToLower(c)));
                         var ratio = (double)vowelsCount / letters.Count;
                         if (ratio >= 0.2 && ratio <= 0.6) return (corrected, lang);

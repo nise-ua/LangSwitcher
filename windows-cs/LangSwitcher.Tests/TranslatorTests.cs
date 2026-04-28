@@ -12,7 +12,6 @@ namespace LangSwitcher.Tests
 
         [Theory]
         [InlineData("ghbdtn", "привет", "ru")]
-        [InlineData("ghbdsn", "привіт", "ua")]
         [InlineData("hello", null, null)] // Already valid English
         [InlineData("цкщтп", "wrong", "en")]
         [InlineData("і", "s", "en")] // single letters that map
@@ -21,6 +20,14 @@ namespace LangSwitcher.Tests
             var (word, lang) = Translator.ChooseCorrection(input, _enabledLangs, _mappings, _exceptions);
             Assert.Equal(expectedWord, word);
             Assert.Equal(expectedLang, lang);
+        }
+
+        [Fact]
+        public void ChooseCorrection_UaOnly()
+        {
+            var (word, lang) = Translator.ChooseCorrection("ghbdsn", new List<string> { "en", "ua" }, _mappings, _exceptions);
+            Assert.Equal("привіт", word);
+            Assert.Equal("ua", lang);
         }
 
         [Fact]
