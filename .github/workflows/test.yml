@@ -22,13 +22,12 @@ jobs:
 
       - name: Run Tests
         run: |
-          dotnet build windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj > build.log 2>&1
+          dotnet test windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj --no-restore --verbosity normal > test.log 2>&1
           if ($LASTEXITCODE -ne 0) {
             git config --global user.name "github-actions"
             git config --global user.email "github-actions@github.com"
-            git add build.log
-            git commit -m "Upload build log"
+            git add test.log
+            git commit -m "Upload test log"
             git push origin HEAD:main
             exit 1
           }
-          dotnet test windows-cs/LangSwitcher.Tests/LangSwitcher.Tests.csproj --no-restore --verbosity normal
