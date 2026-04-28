@@ -29,7 +29,8 @@ There is absolutely **no compilation or terminal required**. Just download, run,
 
 ### 🪟 Windows
 1. Go to the [Releases](../../releases) page and download `LangSwitcher-Windows-vX.X.X.exe`.
-2. Move the `.exe` file to a folder of your choice.
+2. **Prerequisite**: Ensure you have the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed.
+3. Move the `.exe` file to a folder of your choice.
 3. Double-click `LangSwitcher-Windows-vX.X.X.exe` to run it.
 4. The LangSwitcher icon will appear in your System Tray (bottom right corner).
    - *(Tip: You can place a shortcut to the `.exe` in your `shell:startup` folder to have it launch automatically when Windows starts).*

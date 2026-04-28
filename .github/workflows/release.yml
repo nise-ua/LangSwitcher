@@ -40,7 +40,7 @@ jobs:
       - name: Build Windows exe
         run: |
           cd windows-cs
-          dotnet publish LangSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out
+          dotnet publish LangSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o out
           move out\LangSwitcher.exe ..\LangSwitcher-Windows-${{ github.ref_name }}.exe
 
       - name: Upload Windows Artifact
