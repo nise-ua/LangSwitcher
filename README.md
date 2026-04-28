@@ -1,61 +1,59 @@
-# LangSwitcher (Configurable EN/RU/UA)
+# LangSwitcher
 
-Chrome extension that detects when the last typed word appears to be entered with the wrong keyboard layout and rewrites it automatically.
+A system-wide keyboard layout auto-corrector for **macOS** and **Windows**.
 
-## What it does
+Ever typed a whole sentence only to realize you were in the wrong keyboard layout (e.g., `ghbdsn` instead of `привіт`)? LangSwitcher runs silently in the background and automatically detects when you type a word in the wrong layout. It instantly erases it, translates it to the correct layout, re-types it, and switches your OS keyboard language!
 
-- Tracks typing in `input` and `textarea` fields.
-- On word boundary (space/punctuation), checks if the previous word looks like:
-  - English letters typed on RU/UA layout (`ghbdtn` -> `привет` / `привіт`), or
-  - Cyrillic letters typed on EN layout.
-- Rewrites the last word automatically.
-- Updates extension badge with active language (`EN`, `RU`, `UA`).
-- After an auto-switch, the new language is kept as the preferred target for following words.
+![LangSwitcher](https://img.shields.io/badge/Status-Active-brightgreen) ![macOS](https://img.shields.io/badge/macOS-Native-black?logo=apple) ![Windows](https://img.shields.io/badge/Windows-Supported-blue?logo=windows)
 
-## How to add this extension to Chrome
+## 🌟 Features
+- **Auto-Correction**: Instantly fixes mistyped words across *any* application.
+- **Quick Correct Hotkey**: If a word wasn't auto-corrected, simply double-tap your modifier key (Command ⌘ on Mac, Ctrl on Windows) to force the correction! The app automatically learns this mapping for next time.
+- **Custom Exceptions**: Easily add specific acronyms (e.g. `IT`) or enforce your own translations (e.g. `ghbdtn=привет`).
+- **Smart OS Sync**: Keeps track of your system language seamlessly. The menu bar icon changes color to show your current layout (Blue = EN, Yellow = UA, Red = RU).
 
-> This project is loaded as an unpacked extension (developer mode), not from Chrome Web Store.
+---
 
-1. Download or clone this repository to your computer.
-2. Open Google Chrome.
-3. Go to `chrome://extensions`.
-4. Turn on **Developer mode** (top-right toggle).
-5. Click **Load unpacked**.
-6. Select the project root folder (the folder containing `manifest.json`).
-7. Confirm that **LangSwitcher** appears in your extension list.
-8. (Optional) Click the puzzle icon in Chrome toolbar and pin **LangSwitcher** for quick access.
+## 📥 Installation
 
-## Configure language list
+There is absolutely **no compilation or terminal required**. Just download, run, and go!
 
-1. Open `chrome://extensions`
-2. Find **LangSwitcher** and click **Details**
-3. Open **Extension options**
-4. Enable at least 2 languages from the list (EN/RU/UA)
-5. Save settings
+### 🍏 macOS
+1. Go to the [Releases](../../releases) page and download `LangSwitcher-macOS.zip`.
+2. Extract the ZIP file.
+3. Drag `LangSwitcher.app` into your **Applications** folder and double-click to launch it.
+4. **Permissions**: macOS requires Accessibility permissions to intercept keystrokes.
+   - Open **System Settings** → **Privacy & Security** → **Accessibility**.
+   - Check the box next to `LangSwitcher`.
+5. You'll see the LangSwitcher icon appear in your top Menu Bar!
 
-The content script immediately applies updated language list from storage.
+### 🪟 Windows
+1. Go to the [Releases](../../releases) page and download `LangSwitcher-Windows.exe`.
+2. Move the `.exe` file to a folder of your choice.
+3. Double-click `LangSwitcher-Windows.exe` to run it.
+4. The LangSwitcher icon will appear in your System Tray (bottom right corner).
+   - *(Tip: You can place a shortcut to the `.exe` in your `shell:startup` folder to have it launch automatically when Windows starts).*
 
-## Important limitation
+---
 
-Chrome extensions generally **cannot switch your operating system keyboard layout** on Windows/macOS/Linux. This extension emulates that behavior by auto-correcting wrongly typed words and tracking an internal active language state.
+## 🛠 How to Use
 
-## Update after local code changes
+Once running, LangSwitcher works entirely automatically in the background.
 
-1. Open `chrome://extensions`
-2. Find **LangSwitcher**
-3. Click the **Reload** button on the extension card
+### Auto-Correction
+Just type normally. If you accidentally type `ghbdsn ` (with a space or punctuation at the end), it will instantly delete the word, type `привіт `, and switch your system layout to Ukrainian!
 
-## Remove from Chrome
+### Quick Correct Hotkey
+Sometimes a word is skipped because it looks like a valid English word. No problem!
+1. Type your word.
+2. **Double-tap your hotkey** (Default: `Command ⌘` on Mac, `Ctrl` on Windows). 
+3. It will instantly translate the word *and* save it to your dictionary so it auto-corrects automatically next time!
+*(You can customize the hotkey by clicking the LangSwitcher menu icon).*
 
-1. Open `chrome://extensions`
-2. Click **Remove** on the **LangSwitcher** card
-3. Confirm removal
+### Managing Exceptions
+Want to tweak the dictionary? Click the menu bar/tray icon and select **"Manage Exceptions..."**. This opens a simple text editor.
+- **Ignore a word**: Just type the word on a new line (e.g., `git`). The app will never try to auto-correct it.
+- **Force a translation**: Type `wrong=right` on a new line (e.g., `ghbdsn=привіт`).
 
-## Files
-
-- `manifest.json` – extension manifest (MV3)
-- `src/content.js` – typing tracker + auto rewrite logic
-- `src/background.js` – badge + state updates
-- `options/options.html` – configuration page
-- `options/options.js` – settings persistence
-- `options/options.css` – options page styles
+### Supported Languages
+By default, the app supports seamlessly swapping between **English (EN)** and **Ukrainian (UA)** (and Russian (RU)). You can easily toggle which languages are active directly from the menu.

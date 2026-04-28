@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "LangSwitcher",
+			"path": "../LangSwitcher"
+		}
+	],
+	"settings": {}
+}

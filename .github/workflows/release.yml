@@ -1,0 +1,75 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build macOS app
+        run: |
+          cd native
+          ./build.sh
+          # Create a zip of the app preserving file permissions
+          zip -ry ../LangSwitcher-macOS.zip LangSwitcher.app
+
+      - name: Upload Mac Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LangSwitcher-macOS
+          path: LangSwitcher-macOS.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd windows
+          pip install -r requirements.txt
+
+      - name: Build Windows exe
+        run: |
+          cd windows
+          python -m PyInstaller --noconfirm --windowed --onefile --name "LangSwitcher" --icon "icon.png" langswitcher.py
+          move dist\LangSwitcher.exe ..\LangSwitcher-Windows.exe
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LangSwitcher-Windows
+          path: LangSwitcher-Windows.exe
+
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Mac Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LangSwitcher-macOS
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LangSwitcher-Windows
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            LangSwitcher-macOS.zip
+            LangSwitcher-Windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
