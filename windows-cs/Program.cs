@@ -297,16 +297,40 @@ namespace LangSwitcher
 
             if (switchOs && _langInfo.TryGetValue(lang, out var info))
             {
-                var hwnd = GetForegroundWindow();
-                if (hwnd != IntPtr.Zero)
+                var foregroundHwnd = GetForegroundWindow();
+                if (foregroundHwnd != IntPtr.Zero)
                 {
-                    // Pass 1: standard request
-                    PostMessage(hwnd, 0x0050, IntPtr.Zero, (IntPtr)info.Hkl);
-                    // Pass 2: slightly different wParam, some apps prefer this
-                    PostMessage(hwnd, 0x0050, (IntPtr)1, (IntPtr)info.Hkl);
+                    uint threadId = GetWindowThreadProcessId(foregroundHwnd, out _);
+                    uint currentThreadId = GetCurrentThreadId();
+
+                    Logger.Log($"SetLang: Switching OS to {lang} (HKL: 0x{info.Hkl:X8}) for HWND 0x{foregroundHwnd:X}");
+                    
+                    // Tier 1 & 2: Post messages (request change)
+                    PostMessage(foregroundHwnd, 0x0050, IntPtr.Zero, (IntPtr)info.Hkl);
+                    PostMessage(foregroundHwnd, 0x0050, (IntPtr)1, (IntPtr)info.Hkl);
+
+                    // Tier 3: Forceful attachment (mimics TISSelectInputSource robustness)
+                    if (threadId != 0 && threadId != currentThreadId)
+                    {
+                        if (AttachThreadInput(currentThreadId, threadId, true))
+                        {
+                            ActivateKeyboardLayout((IntPtr)info.Hkl, 0);
+                            AttachThreadInput(currentThreadId, threadId, false);
+                            Logger.Log("SetLang: Tier 3 (AttachThreadInput) executed.");
+                        }
+                    }
                 }
             }
         }
+
+        [DllImport("user32.dll")]
+        static extern uint GetCurrentThreadId();
+
+        [DllImport("user32.dll")]
+        static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr ActivateKeyboardLayout(IntPtr hkl, uint Flags);
 
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
@@ -390,7 +414,10 @@ namespace LangSwitcher
             {
                 _lastWord = word;
                 _lastBoundary = boundary;
-                Task.Run(() => TryCorrect(word, boundary));
+                Task.Run(() => {
+                    try { TryCorrect(word, boundary); }
+                    catch (Exception ex) { Logger.Log($"TryCorrect Error: {ex.Message}"); }
+                });
             }
         }
 
@@ -593,19 +620,16 @@ namespace LangSwitcher
                     if (lang == "en" || !CyrToEn.ContainsKey(lang)) continue;
                     var corrected = Transform(word, CyrToEn[lang]);
                     
-                    // Only auto-correct to English if the result looks like English (vowel check)
-                    // or if it's a long enough word to be a likely mistake.
-                    // This prevents correcting valid Cyrillic words like "как", "дела" to nonsense.
                     var letters = corrected.Where(char.IsLetter).ToList();
                     if (letters.Count > 0)
                     {
                         var vowelsCount = letters.Count(c => "aeiouy".Contains(char.ToLower(c)));
                         var ratio = (double)vowelsCount / letters.Count;
                         
-                        // English vowel ratio typically between 20-60%. 
-                        // Removed the "length > 6" check as it caused false positives for valid Cyrillic words.
                         if (ratio >= 0.2 && ratio <= 0.6)
                             return (corrected, "en");
+                        else
+                            Logger.Log($"ChooseCorrection: ratio={ratio:F2} for '{corrected}' rejected.");
                     }
                 }
             }
