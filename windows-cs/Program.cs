@@ -300,9 +300,10 @@ namespace LangSwitcher
                 var hwnd = GetForegroundWindow();
                 if (hwnd != IntPtr.Zero)
                 {
-                    // WM_INPUTLANGCHANGEREQUEST = 0x0050
-                    // Use PostMessage to suggest the change to the foreground window
+                    // Pass 1: standard request
                     PostMessage(hwnd, 0x0050, IntPtr.Zero, (IntPtr)info.Hkl);
+                    // Pass 2: slightly different wParam, some apps prefer this
+                    PostMessage(hwnd, 0x0050, (IntPtr)1, (IntPtr)info.Hkl);
                 }
             }
         }
@@ -433,6 +434,8 @@ namespace LangSwitcher
             _injecting = true;
             try
             {
+                // Match macOS timing (80ms) for better reliability
+                Thread.Sleep(80);
                 int totalBackspaces = _lastWord.Length + (_lastBoundary != '\0' ? 1 : 0);
                 for (int i = 0; i < totalBackspaces; i++)
                 {
@@ -452,8 +455,8 @@ namespace LangSwitcher
             _injecting = true;
             try
             {
-                // Give the system a moment to process the last keystroke
-                Thread.Sleep(20);
+                // Match macOS timing (80ms) for better reliability with OS layout changes
+                Thread.Sleep(80);
                 
                 // Backspace the word + boundary if it was a space/tab/enter
                 int backspaces = original.Length + (boundary != '\0' ? 1 : 0);
@@ -508,7 +511,13 @@ namespace LangSwitcher
 
         static HashSet<string> CyrHints = new() {
             "привет","как","это","что","для","всем","привіт","як","це",
-            "що","усім","ми","вони","бути","є","її"
+            "що","усім","ми","вони","бути","є","її","вот","уже","меня",
+            "было","очень","если","когда","только","через","после",
+            "этого","тоже","даже","может","можно","надо","хочу",
+            "будет","есть","нету","нету","вообще","сейчас","потом",
+            "здесь","там","туда","сюда","почему","зачем","потому",
+            "дела","делаю","сделать","пришел","пришла","сделал",
+            "сделала","сказал","сказала","говорит","говорить"
         };
 
         static Translator()
