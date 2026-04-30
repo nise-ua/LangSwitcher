@@ -66,7 +66,7 @@ function onInput(event) {
   if (!wordMatch) return;
 
   const wrongWord = wordMatch[1];
-  const decision = chooseCorrection(wrongWord, enabledLanguages);
+  const decision = chooseCorrection(wrongWord, enabledLanguages, activeLang);
   if (!decision || decision.corrected === wrongWord) return;
 
   const wordStart = before.length - wrongWord.length;
@@ -77,32 +77,50 @@ function onInput(event) {
   const newCaret = caret + delta;
   target.setSelectionRange(newCaret, newCaret);
 
+  activeLang = decision.lang;
   chrome.runtime.sendMessage({ type: "langsw:set-active-lang", lang: decision.lang });
 }
 
-function chooseCorrection(word, enabled) {
+function chooseCorrection(word, enabled, preferredLang) {
   const lower = word.toLowerCase();
   const hasLatin = /[a-z]/i.test(lower);
   const hasCyr = /[а-яёіїєґ]/i.test(lower);
 
   if (hasLatin && !hasCyr) {
-    const candidates = enabled
-      .filter((lang) => lang !== "en" && LAYOUTS[lang])
-      .map((lang) => {
-        const corrected = transformWithCase(word, LAYOUTS[lang]);
-        return { corrected, lang, score: scoreCyrCandidate(corrected, lang) };
-      });
+    const cyrEnabled = enabled.filter((lang) => lang !== "en" && LAYOUTS[lang]);
+    if (!cyrEnabled.length) return null;
+
+    if (preferredLang !== "en" && cyrEnabled.includes(preferredLang)) {
+      const forced = transformWithCase(word, LAYOUTS[preferredLang]);
+      if (forced !== word) {
+        return { corrected: forced, lang: preferredLang };
+      }
+    }
+
+    const candidates = cyrEnabled.map((lang) => {
+      const corrected = transformWithCase(word, LAYOUTS[lang]);
+      return { corrected, lang, score: scoreCyrCandidate(corrected, lang) };
+    });
 
     return pickCandidate(candidates);
   }
 
   if (hasCyr && !hasLatin && enabled.includes("en")) {
-    const candidates = enabled
-      .filter((lang) => lang !== "en" && CYR_TO_EN[lang])
-      .map((lang) => {
-        const corrected = transformWithCase(word, CYR_TO_EN[lang]);
-        return { corrected, lang: "en", score: scoreEnCandidate(corrected) };
-      });
+    const cyrEnabled = enabled.filter((lang) => lang !== "en" && CYR_TO_EN[lang]);
+    if (!cyrEnabled.length) return null;
+
+    if (preferredLang === "en") {
+      const preferredSource = cyrEnabled[0];
+      const forced = transformWithCase(word, CYR_TO_EN[preferredSource]);
+      if (forced !== word) {
+        return { corrected: forced, lang: "en" };
+      }
+    }
+
+    const candidates = cyrEnabled.map((lang) => {
+      const corrected = transformWithCase(word, CYR_TO_EN[lang]);
+      return { corrected, lang: "en", score: scoreEnCandidate(corrected) };
+    });
 
     return pickCandidate(candidates);
   }
